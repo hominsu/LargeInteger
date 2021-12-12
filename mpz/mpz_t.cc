@@ -4,6 +4,9 @@
 
 #ifdef MPZ
 
+#include <cstring>
+#include <stdexcept>
+
 namespace {
 template<size_t Len>
 constexpr mpz_t<Len> kMagicN_0xCCCCCCCD = mpz_t<Len>(0xCCCCCCCD);
