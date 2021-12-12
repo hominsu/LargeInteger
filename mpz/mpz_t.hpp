@@ -6,7 +6,10 @@
 #define SGMP_MPZ_MPZ_T_HPP_
 
 #include <cstdio>
+#include <cstdint>
+
 #include <vector>
+#include <string>
 
 template<size_t Len>
 class mpz_t;
