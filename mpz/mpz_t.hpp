@@ -30,6 +30,18 @@ template<size_t Len>
 mpz_t<Len> operator+(mpz_t<Len> &&_a, const mpz_t<Len> &_b);
 
 template<size_t Len>
+mpz_t<Len> operator+(const mpz_t<Len> &_a, mpz_t<Len> &&_b);
+
+template<size_t Len>
+mpz_t<Len> operator+(mpz_t<Len> &&_a, mpz_t<Len> &&_b);
+
+template<size_t Len>
+mpz_t<Len> operator-(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
+
+template<size_t Len>
+mpz_t<Len> operator-(mpz_t<Len> &&_a, const mpz_t<Len> &_b);
+
+template<size_t Len>
 mpz_t<Len> operator*(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
 
 template<size_t Len>
@@ -83,42 +95,42 @@ class mpz_t {
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator>=(Tint &&_b) const {
-    return *this >= mpz_t<Len>(std::forward<Tint>(_b));
+    return *this >= mpz_t<Len>(_b);
   }
 
   bool operator<=(const mpz_t<Len> &_b) const;
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator<=(Tint &&_b) const {
-    return *this <= mpz_t<Len>(std::forward<Tint>(_b));
+    return *this <= mpz_t<Len>(_b);
   }
 
   bool operator<(const mpz_t<Len> &_b) const;
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator<(Tint &&_b) const {
-    return *this < mpz_t<Len>(std::forward<Tint>(_b));
+    return *this < mpz_t<Len>(_b);
   }
 
   bool operator>(const mpz_t<Len> &_b) const;
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator>(Tint &&_b) const {
-    return *this > mpz_t<Len>(std::forward<Tint>(_b));
+    return *this > mpz_t<Len>(_b);
   }
 
   bool operator==(const mpz_t<Len> &_b) const;
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator==(Tint &&_b) const {
-    return *this == mpz_t<Len>(std::forward<Tint>(_b));
+    return *this == mpz_t<Len>(_b);
   }
 
   bool operator!=(const mpz_t<Len> &_b) const;
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline bool operator!=(Tint &&_b) const {
-    return *this != mpz_t<Len>(std::forward<Tint>(_b));
+    return *this != mpz_t<Len>(_b);
   }
 
   mpz_t<Len> &operator=(const mpz_t<Len> &_mpz_t);
@@ -127,7 +139,7 @@ class mpz_t {
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   mpz_t<Len> &operator=(Tint &&_a) noexcept {
-    unit_ = std::move(mpz_t<Len>(std::forward<Tint>(_a)).unit_);
+    unit_ = std::move(mpz_t<Len>(_a).unit_);
     return *this;
   }
 
@@ -163,38 +175,54 @@ class mpz_t {
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   friend inline mpz_t<Len> operator&(const mpz_t<Len> &_a, Tint &&_b) {
-    return _a & mpz_t<Len>(std::forward<Tint>(_b));
+    return _a & mpz_t<Len>(_b);
   }
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   friend inline mpz_t<Len> operator&(Tint &&_a, const mpz_t<Len> &&_b) {
-    return mpz_t<Len>(std::forward<Tint>(_a)) & _b;
+    return mpz_t<Len>(_a) & _b;
   }
 
   friend mpz_t<Len> operator+<>(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
 
   friend mpz_t<Len> operator+<>(mpz_t<Len> &&_a, const mpz_t<Len> &_b);
 
+  friend mpz_t<Len> operator+<>(const mpz_t<Len> &_a, mpz_t<Len> &&_b);
+
+  friend mpz_t<Len> operator+<>(mpz_t<Len> &&_a, mpz_t<Len> &&_b);
+
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline mpz_t<Len> operator+(Tint &&_b) {
-    return *this + mpz_t<Len>(std::forward<Tint>(_b));
+    return *this + mpz_t<Len>(_b);
   }
 
-  friend inline mpz_t<Len> operator-(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
-    return _a + (~_b + 1);
-  }
+  mpz_t<Len> &operator+=(const mpz_t<Len> &_b);
+
+  mpz_t<Len> &operator+=(mpz_t<Len> &&_b);
+
+  friend mpz_t<Len> operator-<>(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
+
+  friend mpz_t<Len> operator-<>(mpz_t<Len> &&_a, const mpz_t<Len> &_b);
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline mpz_t<Len> operator-(Tint &&_b) {
-    return *this + (~std::forward<Tint>(_b) + 1);
+    return *this + (~_b + 1);
   }
+
+  mpz_t<Len> &operator-=(const mpz_t<Len> &_b);
+
+  mpz_t<Len> &operator-=(mpz_t<Len> &&_b);
 
   friend mpz_t<Len> operator*<>(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline mpz_t<Len> operator*(Tint &&_b) {
-    return *this * mpz_t<Len>(std::forward<Tint>(_b));
+    return *this * mpz_t<Len>(_b);
   }
+
+  mpz_t<Len> &operator*=(const mpz_t<Len> &_b);
+
+  mpz_t<Len> &operator*=(mpz_t<Len> &&_b);
 
   mpz_t<Len> slow_divide(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
 
@@ -202,15 +230,24 @@ class mpz_t {
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline mpz_t<Len> operator/(Tint &&_b) {
-    return *this / mpz_t<Len>(std::forward<Tint>(_b));
+    return *this / mpz_t<Len>(_b);
   }
+
+  mpz_t<Len> &operator/=(const mpz_t<Len> &_b);
+
+  mpz_t<Len> &operator/=(mpz_t<Len> &&_b);
 
   friend mpz_t<Len> operator%<>(const mpz_t<Len> &_a, const mpz_t<Len> &_b);
 
   template<typename Tint, class = typename std::enable_if_t<std::is_integral_v<std::remove_reference_t<Tint>>>>
   inline mpz_t<Len> operator%(Tint &&_b) {
-    return *this % mpz_t<Len>(std::forward<Tint>(_b));
+    return *this % mpz_t<Len>(_b);
   }
+
+  mpz_t<Len> &operator%=(const mpz_t<Len> &_b);
+
+  mpz_t<Len> &operator%=(mpz_t<Len> &&_b);
+
 };
 
 #define MPZ

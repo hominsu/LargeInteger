@@ -158,12 +158,12 @@ inline bool mpz_t<Len>::operator>(const mpz_t<Len> &_b) const {
 }
 
 template<size_t Len>
-bool mpz_t<Len>::operator==(const mpz_t<Len> &_b) const {
+inline bool mpz_t<Len>::operator==(const mpz_t<Len> &_b) const {
   return *this >= _b && *this <= _b;
 }
 
 template<size_t Len>
-bool mpz_t<Len>::operator!=(const mpz_t<Len> &_b) const {
+inline bool mpz_t<Len>::operator!=(const mpz_t<Len> &_b) const {
   return *this > _b || *this < _b;
 }
 
@@ -207,7 +207,7 @@ mpz_t<Len> &mpz_t<Len>::operator<<=(const mpz_t<Len> &_n) {
 }
 
 template<size_t Len>
-mpz_t<Len> &mpz_t<Len>::operator<<(const mpz_t<Len> &_n) {
+inline mpz_t<Len> &mpz_t<Len>::operator<<(const mpz_t<Len> &_n) {
   return *this <<= _n;
 }
 
@@ -239,7 +239,7 @@ mpz_t<Len> &mpz_t<Len>::operator>>=(const mpz_t<Len> &_n) {
 }
 
 template<size_t Len>
-mpz_t<Len> &mpz_t<Len>::operator>>(const mpz_t<Len> &_n) {
+inline mpz_t<Len> &mpz_t<Len>::operator>>(const mpz_t<Len> &_n) {
   return *this >>= _n;
 }
 
@@ -319,6 +319,74 @@ mpz_t<Len> operator+(mpz_t<Len> &&_a, const mpz_t<Len> &_b) {
 }
 
 template<size_t Len>
+mpz_t<Len> operator+(const mpz_t<Len> &_a, mpz_t<Len> &&_b) {
+  mpz_t<Len> ret = std::move(_b);
+
+  auto it_a = _a.unit_.begin();
+
+  uint8_t c = 0;
+  uint64_t result;
+  for (int i = 0; i < _a.num_; ++i) {
+    result = static_cast<uint64_t>(it_a[i]) + static_cast<uint64_t>(ret.unit_[i]) + c;
+    ret.unit_[i] = (result & 0xffffffff); // 取低 32 位
+    c = result >> 32;  // 进位
+  }
+
+  return ret;
+}
+
+template<size_t Len>
+mpz_t<Len> operator+(mpz_t<Len> &&_a, mpz_t<Len> &&_b) {
+  mpz_t<Len> ret = std::move(_a);
+
+  auto it_b = _b.unit_.begin();
+
+  uint8_t c = 0;
+  uint64_t result;
+  for (int i = 0; i < _a.num_; ++i) {
+    result = static_cast<uint64_t>(ret.unit_[i]) + static_cast<uint64_t>(it_b[i]) + c;
+    ret.unit_[i] = (result & 0xffffffff); // 取低 32 位
+    c = result >> 32;  // 进位
+  }
+
+  return ret;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator+=(const mpz_t<Len> &_b) {
+  *this = *this + _b;
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator+=(mpz_t<Len> &&_b) {
+  *this = *this + std::forward<mpz_t<Len>>(_b);
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> operator-(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
+  return _a + (~_b + 1);
+}
+
+template<size_t Len>
+inline mpz_t<Len> operator-(mpz_t<Len> &&_a, const mpz_t<Len> &_b) {
+  return std::forward<mpz_t<Len>>(_a) + (~_b + 1);
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator-=(const mpz_t<Len> &_b) {
+  *this = *this - _b;
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator-=(mpz_t<Len> &&_b) {
+  *this = *this - std::forward<mpz_t<Len>>(_b);
+  return *this;
+}
+
+template<size_t Len>
 mpz_t<Len> operator*(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
   bool flag = (_a.get_sign() ^ _b.get_sign()) ? 1 : 0;
 
@@ -342,12 +410,24 @@ mpz_t<Len> operator*(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
 }
 
 template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator*=(const mpz_t<Len> &_b) {
+  *this = *this * _b;
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator*=(mpz_t<Len> &&_b) {
+  *this = *this * std::forward<mpz_t<Len>>(_b);
+  return *this;
+}
+
+template<size_t Len>
 mpz_t<Len> mpz_t<Len>::slow_divide(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
   mpz_t<Len> a = _a;
   mpz_t<Len> ret(0);
   while (a >= _b) {
-    ret = ret + 1;
-    a = a - _b;
+    ret += 1;
+    a -= _b;
   }
   return ret;
 }
@@ -378,11 +458,11 @@ mpz_t<Len> operator/(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
       mpz_t<Len> weight(1);
       mpz_t<Len> tmp = b;
       while (tmp + tmp <= a) {
-        weight = weight + weight;
-        tmp = tmp + tmp;
+        weight += weight;
+        tmp += tmp;
       }
-      a = a - tmp;
-      ret = ret + weight;
+      a -= tmp;
+      ret += weight;
     }
 //    for (int i = Len; i >= 0; i--) {
 //      if ((a >> i) >= b) {
@@ -396,8 +476,32 @@ mpz_t<Len> operator/(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
 }
 
 template<size_t Len>
-mpz_t<Len> operator%(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
+inline mpz_t<Len> &mpz_t<Len>::operator/=(const mpz_t<Len> &_b) {
+  *this = *this / _b;
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator/=(mpz_t<Len> &&_b) {
+  *this = *this / std::forward<mpz_t<Len>>(_b);
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> operator%(const mpz_t<Len> &_a, const mpz_t<Len> &_b) {
   return _a - ((_a / _b) * _b);
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator%=(const mpz_t<Len> &_b) {
+  *this = *this % _b;
+  return *this;
+}
+
+template<size_t Len>
+inline mpz_t<Len> &mpz_t<Len>::operator%=(mpz_t<Len> &&_b) {
+  *this = *this % std::forward<mpz_t<Len>>(_b);
+  return *this;
 }
 
 #endif //MPZ
